@@ -61,13 +61,10 @@ class Minefield
     already_explored = []
     until to_explore.empty?
       exploring = to_explore.pop
-      ADJACENT_OFFSETS.each do |offset|
-        adjacent_point = exploring.add(offset)
-        next unless in_field?(adjacent_point)
-
+      each_point_adjacent_to(exploring) do |adjacent_point|
+        next if already_explored.include?(adjacent_point)
         reveal_just_this adjacent_point
-        if number_of_adjacent_mines(adjacent_point).zero? &&
-           !already_explored.include?(adjacent_point)
+        if number_of_adjacent_mines(adjacent_point).zero?
           to_explore << adjacent_point
         end
       end
@@ -98,11 +95,8 @@ class Minefield
 
   def number_of_adjacent_mines(point)
     number_of_adjacent_mines = 0
-    ADJACENT_OFFSETS.each do |offset|
-      adjacent_point = point.add(offset)
-      if in_field?(adjacent_point) && mine?(adjacent_point)
-        number_of_adjacent_mines += 1
-      end
+    each_point_adjacent_to(point) do |adjacent_point|
+      number_of_adjacent_mines += 1 if mine?(adjacent_point)
     end
     number_of_adjacent_mines
   end
@@ -125,6 +119,13 @@ class Minefield
       mine_array << flat_mine_array[first_index_of_row..last_index_of_row]
     end
     mine_array
+  end
+
+  def each_point_adjacent_to(point)
+    ADJACENT_OFFSETS.each do |offset|
+      adjacent_point = point.add(offset)
+      yield adjacent_point if in_field?(adjacent_point)
+    end
   end
 
   def mine?(point)
