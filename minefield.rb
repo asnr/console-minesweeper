@@ -1,3 +1,5 @@
+class OutOfMinefieldBoundsError < StandardError; end
+
 class Minefield
   EMPTY = :empty
   HIDDEN = :hidden
@@ -12,6 +14,7 @@ class Minefield
   end
 
   def reveal(row, column)
+    raise OutOfMinefieldBoundsError unless coordinates_valid?(row, column)
     @revealed[row][column] = true
   end
 
@@ -21,5 +24,11 @@ class Minefield
         is_cell_revealed ? EMPTY : HIDDEN
       end
     end
+  end
+
+  private
+
+  def coordinates_valid?(row, column)
+    0 <= row && row < @rows && 0 <= column && column < @height
   end
 end
