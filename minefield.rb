@@ -19,6 +19,7 @@ class Minefield
   def reveal(row, column)
     raise OutOfMinefieldBoundsError unless coordinates_valid?(row, column)
     @revealed[row][column] = true
+    reveal_trivial_safe_choices(row, column) if !@mines[row][column]
   end
 
   def cell_states
@@ -45,6 +46,28 @@ class Minefield
   end
 
   private
+
+  def reveal_trivial_safe_choices(row, column)
+    return if number_of_adjacent_mines(row, column) > 0
+
+    to_explore = [[row, column]]
+    already_explored = []
+    while !to_explore.empty?
+      exploring = to_explore.pop
+      ADJACENT_OFFSETS.each do |row_offset, column_offset|
+        adjacent_row = exploring[0] + row_offset
+        adjacent_column = exploring[1] + column_offset
+        next unless coordinates_valid?(adjacent_row, adjacent_column)
+
+        @revealed[adjacent_row][adjacent_column] = true
+        if number_of_adjacent_mines(adjacent_row, adjacent_column).zero? &&
+           !already_explored.include?([adjacent_row, adjacent_column])
+          to_explore << [adjacent_row, adjacent_column]
+        end
+      end
+      already_explored << exploring
+    end
+  end
 
   def all_safe_cells_uncovered?
     (0...@rows).each do |row|
