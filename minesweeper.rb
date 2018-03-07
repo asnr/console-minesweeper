@@ -28,10 +28,14 @@ class Game
     end
 
     print "\n"
-    if @minefield.exploded?
-      puts 'You lost :('
+    if @minefield.finished?
+      if @minefield.exploded?
+        puts 'You lost :('
+      else
+        puts 'You won :D'
+      end
     else
-      puts 'You won :D'
+      puts 'byebye'
     end
   end
 

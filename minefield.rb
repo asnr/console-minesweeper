@@ -60,11 +60,27 @@ class Minefield
       if @mines[row][column]
         MINE
       else
-        EMPTY
+        number_of_adjacent_mines(row, column)
       end
     else
       HIDDEN
     end
+  end
+
+  ADJACENT_OFFSETS = [[-1, -1], [-1, 0], [-1, 1],
+                      [ 0, -1],          [ 0, 1],
+                      [ 1, -1], [ 1, 0], [ 1, 1]]
+  def number_of_adjacent_mines(row, column)
+    number_of_adjacent_mines = 0
+    ADJACENT_OFFSETS.each do |row_offset, column_offset|
+      adjacent_row = row + row_offset
+      adjacent_column = column + column_offset
+      if coordinates_valid?(adjacent_row, adjacent_column) &&
+         @mines[adjacent_row][adjacent_column]
+        number_of_adjacent_mines += 1
+      end
+    end
+    number_of_adjacent_mines
   end
 
   def coordinates_valid?(row, column)
