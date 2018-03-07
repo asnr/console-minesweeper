@@ -3,6 +3,7 @@ class OutOfMinefieldBoundsError < StandardError; end
 class Minefield
   EMPTY = :empty
   HIDDEN = :hidden
+  MINE = :mine
 
   def initialize
     @rows = 10
@@ -11,6 +12,8 @@ class Minefield
     (0...@rows).each_with_object(@revealed) do |_, revealed|
       revealed << [false] * @columns
     end
+    @number_of_mines = 10
+    @mines = random_2d_mine_array
   end
 
   def reveal(row, column)
@@ -19,16 +22,45 @@ class Minefield
   end
 
   def cell_states
-    @revealed.map do |row|
-      row.map do |is_cell_revealed|
-        is_cell_revealed ? EMPTY : HIDDEN
+    (0...@rows).each_with_object([]) do |row_index, cell_states|
+      cell_state_row = []
+      (0...@columns).each_with_object(cell_state_row) do |column_index, row|
+        row << cell_state(row_index, column_index)
       end
+      cell_states << cell_state_row
     end
   end
 
   private
 
+  def cell_state(row, column)
+    if @revealed[row][column]
+      if @mines[row][column]
+        MINE
+      else
+        EMPTY
+      end
+    else
+      HIDDEN
+    end
+  end
+
   def coordinates_valid?(row, column)
-    0 <= row && row < @rows && 0 <= column && column < @height
+    0 <= row && row < @rows && 0 <= column && column < @columns
+  end
+
+  def random_2d_mine_array
+    number_cells_in_minefield = @rows * @columns
+    number_of_safe_cells = number_cells_in_minefield - @number_of_mines
+    ordered_flat_mine_array = [true] * @number_of_mines +
+                              [false] * number_of_safe_cells
+    flat_mine_array = ordered_flat_mine_array.shuffle
+    mine_array = []
+    (0...@rows).each do |row_index|
+      first_index_of_row = row_index * @columns
+      last_index_of_row = first_index_of_row + @columns - 1
+      mine_array << flat_mine_array[first_index_of_row..last_index_of_row]
+    end
+    mine_array
   end
 end

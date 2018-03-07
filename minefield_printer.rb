@@ -15,6 +15,8 @@ class MinefieldPrinter
           ' '
         elsif cell_state == Minefield::HIDDEN
           'O'
+        elsif cell_state == Minefield::MINE
+          'X'
         else
           raise StandardError, 'Cell state not recognised'
         end
