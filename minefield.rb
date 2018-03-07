@@ -31,7 +31,29 @@ class Minefield
     end
   end
 
+  def finished?
+    exploded? || all_safe_cells_uncovered?
+  end
+
+  def exploded?
+    (0...@rows).each do |row|
+      (0...@columns).each do |column|
+        return true if @revealed[row][column] && @mines[row][column]
+      end
+    end
+    false
+  end
+
   private
+
+  def all_safe_cells_uncovered?
+    (0...@rows).each do |row|
+      (0...@columns).each do |column|
+        return false unless @revealed[row][column] || @mines[row][column]
+      end
+    end
+    true
+  end
 
   def cell_state(row, column)
     if @revealed[row][column]

@@ -24,6 +24,14 @@ class Game
         next
       end
       @minefield_printer.print_field(@minefield.cell_states)
+      break if @minefield.finished?
+    end
+
+    print "\n"
+    if @minefield.exploded?
+      puts 'You lost :('
+    else
+      puts 'You won :D'
     end
   end
 
