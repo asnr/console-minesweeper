@@ -1,9 +1,15 @@
+require './point.rb'
+
 class OutOfMinefieldBoundsError < StandardError; end
 
 class Minefield
   EMPTY = :empty
   HIDDEN = :hidden
   MINE = :mine
+
+  ADJACENT_OFFSETS = [Point.new(-1, -1), Point.new(-1, 0), Point.new(-1, 1),
+                      Point.new( 0, -1),                   Point.new( 0, 1),
+                      Point.new( 1, -1), Point.new( 1, 0), Point.new( 1, 1)]
 
   def initialize
     @rows = 10
@@ -16,17 +22,18 @@ class Minefield
     @mines = random_2d_mine_array
   end
 
-  def reveal(row, column)
-    raise OutOfMinefieldBoundsError unless coordinates_valid?(row, column)
-    @revealed[row][column] = true
-    reveal_trivial_safe_choices(row, column) if !@mines[row][column]
+  def reveal(point)
+    raise OutOfMinefieldBoundsError unless in_field?(point)
+    reveal_just_this point
+    reveal_trivial_safe_choices(point) unless mine?(point)
   end
 
   def cell_states
     (0...@rows).each_with_object([]) do |row_index, cell_states|
       cell_state_row = []
       (0...@columns).each_with_object(cell_state_row) do |column_index, row|
-        row << cell_state(row_index, column_index)
+        point = Point.new(row_index, column_index)
+        row << cell_state(point)
       end
       cell_states << cell_state_row
     end
@@ -47,22 +54,21 @@ class Minefield
 
   private
 
-  def reveal_trivial_safe_choices(row, column)
-    return if number_of_adjacent_mines(row, column) > 0
+  def reveal_trivial_safe_choices(point)
+    return if number_of_adjacent_mines(point) > 0
 
-    to_explore = [[row, column]]
+    to_explore = [point]
     already_explored = []
-    while !to_explore.empty?
+    until to_explore.empty?
       exploring = to_explore.pop
-      ADJACENT_OFFSETS.each do |row_offset, column_offset|
-        adjacent_row = exploring[0] + row_offset
-        adjacent_column = exploring[1] + column_offset
-        next unless coordinates_valid?(adjacent_row, adjacent_column)
+      ADJACENT_OFFSETS.each do |offset|
+        adjacent_point = exploring.add(offset)
+        next unless in_field?(adjacent_point)
 
-        @revealed[adjacent_row][adjacent_column] = true
-        if number_of_adjacent_mines(adjacent_row, adjacent_column).zero? &&
-           !already_explored.include?([adjacent_row, adjacent_column])
-          to_explore << [adjacent_row, adjacent_column]
+        reveal_just_this adjacent_point
+        if number_of_adjacent_mines(adjacent_point).zero? &&
+           !already_explored.include?(adjacent_point)
+          to_explore << adjacent_point
         end
       end
       already_explored << exploring
@@ -78,36 +84,32 @@ class Minefield
     true
   end
 
-  def cell_state(row, column)
-    if @revealed[row][column]
-      if @mines[row][column]
+  def cell_state(point)
+    if revealed?(point)
+      if mine?(point)
         MINE
       else
-        number_of_adjacent_mines(row, column)
+        number_of_adjacent_mines(point)
       end
     else
       HIDDEN
     end
   end
 
-  ADJACENT_OFFSETS = [[-1, -1], [-1, 0], [-1, 1],
-                      [ 0, -1],          [ 0, 1],
-                      [ 1, -1], [ 1, 0], [ 1, 1]]
-  def number_of_adjacent_mines(row, column)
+  def number_of_adjacent_mines(point)
     number_of_adjacent_mines = 0
-    ADJACENT_OFFSETS.each do |row_offset, column_offset|
-      adjacent_row = row + row_offset
-      adjacent_column = column + column_offset
-      if coordinates_valid?(adjacent_row, adjacent_column) &&
-         @mines[adjacent_row][adjacent_column]
+    ADJACENT_OFFSETS.each do |offset|
+      adjacent_point = point.add(offset)
+      if in_field?(adjacent_point) && mine?(adjacent_point)
         number_of_adjacent_mines += 1
       end
     end
     number_of_adjacent_mines
   end
 
-  def coordinates_valid?(row, column)
-    0 <= row && row < @rows && 0 <= column && column < @columns
+  def in_field?(point)
+    0 <= point.row && point.row < @rows &&
+      0 <= point.column && point.column < @columns
   end
 
   def random_2d_mine_array
@@ -123,5 +125,17 @@ class Minefield
       mine_array << flat_mine_array[first_index_of_row..last_index_of_row]
     end
     mine_array
+  end
+
+  def mine?(point)
+    @mines[point.row][point.column]
+  end
+
+  def revealed?(point)
+    @revealed[point.row][point.column]
+  end
+
+  def reveal_just_this(point)
+    @revealed[point.row][point.column] = true
   end
 end

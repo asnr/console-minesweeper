@@ -1,3 +1,4 @@
+require './point.rb'
 require './minefield_printer.rb'
 
 class ParseError < StandardError; end
@@ -14,8 +15,8 @@ class Game
       player_input = read_user_input
       break if player_input == 'q'
       begin
-        row_to_reveal, column_to_reveal = parse(player_input)
-        @minefield.reveal(row_to_reveal, column_to_reveal)
+        point_to_reveal = parse(player_input)
+        @minefield.reveal(point_to_reveal)
       rescue ParseError => error
         puts error.message
         next
@@ -55,7 +56,7 @@ class Game
     rescue ArgumentError
       raise ParseError, 'Coordinates should be integers'
     end
-    coordinates
+    Point.new(coordinates[0], coordinates[1])
   end
 end
 
