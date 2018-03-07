@@ -44,10 +44,8 @@ class Minefield
   end
 
   def exploded?
-    (0...@rows).each do |row|
-      (0...@columns).each do |column|
-        return true if @revealed[row][column] && @mines[row][column]
-      end
+    each_point do |point|
+      return true if revealed?(point) && mine?(point)
     end
     false
   end
@@ -73,10 +71,8 @@ class Minefield
   end
 
   def all_safe_cells_uncovered?
-    (0...@rows).each do |row|
-      (0...@columns).each do |column|
-        return false unless @revealed[row][column] || @mines[row][column]
-      end
+    each_point do |point|
+      return false unless revealed?(point) || mine?(point)
     end
     true
   end
@@ -119,6 +115,14 @@ class Minefield
       mine_array << flat_mine_array[first_index_of_row..last_index_of_row]
     end
     mine_array
+  end
+
+  def each_point
+    (0...@rows).each do |row|
+      (0...@columns).each do |column|
+        yield Point.new(row, column)
+      end
+    end
   end
 
   def each_point_adjacent_to(point)
