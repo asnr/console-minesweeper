@@ -3,7 +3,6 @@ require './point.rb'
 class OutOfMinefieldBoundsError < StandardError; end
 
 class Minefield
-  EMPTY = :empty
   HIDDEN = :hidden
   MINE = :mine
 
