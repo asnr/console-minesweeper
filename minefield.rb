@@ -8,11 +8,11 @@ class Minefield
   def initialize
     @rows = 10
     @columns = 10
+    @number_of_mines = 10
     @revealed = []
     (0...@rows).each_with_object(@revealed) do |_, revealed|
       revealed << [false] * @columns
     end
-    @number_of_mines = 10
     @mines = random_2d_mine_array
   end
 
