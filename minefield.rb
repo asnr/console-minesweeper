@@ -22,9 +22,10 @@ class Minefield
   end
 
   def reveal(point)
-    raise OutOfMinefieldBoundsError unless in_field?(point)
+    return false unless in_field?(point)
     reveal_just_this point
     reveal_trivial_safe_choices(point) unless mine?(point)
+    true
   end
 
   def cell_states
@@ -42,14 +43,21 @@ class Minefield
     exploded? || all_safe_cells_uncovered?
   end
 
+  def all_safe_cells_uncovered?
+    each_point do |point|
+      return false unless revealed?(point) || mine?(point)
+    end
+    true
+  end
+
+  private
+
   def exploded?
     each_point do |point|
       return true if revealed?(point) && mine?(point)
     end
     false
   end
-
-  private
 
   def reveal_trivial_safe_choices(point)
     return if number_of_adjacent_mines(point) > 0
@@ -67,13 +75,6 @@ class Minefield
       end
       already_explored << exploring
     end
-  end
-
-  def all_safe_cells_uncovered?
-    each_point do |point|
-      return false unless revealed?(point) || mine?(point)
-    end
-    true
   end
 
   def cell_state(point)
